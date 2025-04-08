@@ -7,7 +7,7 @@ from airflow.operators.python import PythonVirtualenvOperator
 import pendulum
 import requests
 import os
-#from myairflow import DataManager as DM
+from myairflow import DataManager as DM
 
 
 local_tz = pendulum.timezone("Asia/Seoul")
@@ -26,21 +26,21 @@ with DAG(
     end = EmptyOperator(task_id="end")
     
     make_data = BashOperator(task_id="make_data",
-                             bashcommand="""
+                             bash_command="""
                              bash ~/airflow/make_data.sh ~/data/{{ data_interval_start.in_tz('Asia/Seoul').strftime('%Y/%m/%d/%H') }}
                              """)
     
     load_data = PythonVirtualenvOperator(task_id="load_data",
-                                         python_callable = "myairflow.DataManager.load_data",
+                                         python_callable = DM.data_load,
                                          op_args=["{{ data_interval_start.in_tz('Asia/Seoul').strftime('%Y/%m/%d/%H') }}"],
-                                         requirements=["git+https://github.com/username/myetl.git"]
+                                         requirements=["git+https://github.com/cho6019/myairflow.git"]
                                          
                                          )
     
     agg_data = PythonVirtualenvOperator(task_id="load_data",
-                                        python_callable = "myairflow.DataManager.load_data",
+                                        python_callable = DM.data_agg,
                                         op_args=["{{ data_interval_start.in_tz('Asia/Seoul').strftime('%Y/%m/%d/%H') }}"],
-                                        requirements=["git+https://github.com/username/myetl.git"]
+                                        requirements=["git+https://github.com/cho6019/myairflow.git"]
                                         )
 
     
